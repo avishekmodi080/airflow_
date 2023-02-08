@@ -194,6 +194,20 @@ def check_again():
 def sleep_after_append():
             time.sleep(60)
   
+    
+def handling_left_over_csvs():
+    os.chdir("/home/kcpl/SPYDER")
+    source = '/home/kcpl/SPYDER'
+    destination = '/home/kcpl/SPYDER/dump'
+    csv_files_1 = glob.glob('*.{}'.format('csv'))
+    for file in csv_files_1:
+        src_path = os.path.join(source, file)
+        dst_path = os.path.join(destination, file)
+        if len(csv_files_1)>=1:
+            shutil.move(src_path, dst_path)
+        else:
+            print('You are done!')
+        
                 
                
                 
@@ -237,5 +251,11 @@ with DAG("avishek_2",start_date=datetime(2023,2,7),schedule_interval= timedelta(
     email_on_failure=True,
     python_callable = sleep_after_append
     )
+    
+    moving_extra_csvs = PythonOperator(
+    task_id='moving_extra_csvs',
+    email_on_failure=True,
+    python_callable = handling_left_over_csvs
+    )
 
-append_csv>>wait_time>>re_check>>sleep_time
+append_csv>>wait_time>>re_check>>sleep_time>>moving_extra_csvs
