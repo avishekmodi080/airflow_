@@ -46,6 +46,23 @@ def mail1():
     server.send_message(msg)
     print('Mail Sent')
 
+try:
+        db_connection = mysql.connector.connect(host="localhost", user="root", password="root", database="CredAble")
+        curr = db_connection.cursor(buffered=True)
+        curr.execute("""use CredAble;""")
+        curr.execute("""select max(cust_id) from table_1;""")
+        d = curr.fetchone()
+        curr.close()
+        print(d)
+except mysql.connector.Error as error:
+        print('error establishing connection to database {}'.format(error))
+
+print(d[0])
+
+b = d[0]
+with open('sequence_count.txt', 'w') as f:
+    f.write('{}'.format(b+1))
+    f.close()
 
 def append_csvs():
         source = '/home/kcpl/SPYDER'
@@ -184,8 +201,8 @@ def wait_for_upload():
         time.sleep(60)
         
 def check_again():
-            csv_files = glob.glob('*.{}'.format('csv'))
-            if len(csv_files)>=1:
+            csv_files_1 = glob.glob('*.{}'.format('csv'))
+            if len(csv_files_1)>=1:
                 print('csv folders are there')
                 append_csvs()
             else:
@@ -199,11 +216,11 @@ def handling_left_over_csvs():
     os.chdir("/home/kcpl/SPYDER")
     source = '/home/kcpl/SPYDER'
     destination = '/home/kcpl/SPYDER/dump'
-    csv_files_1 = glob.glob('*.{}'.format('csv'))
-    for file in csv_files_1:
+    csv_files_2 = glob.glob('*.{}'.format('csv'))
+    for file in csv_files_2:
         src_path = os.path.join(source, file)
         dst_path = os.path.join(destination, file)
-        if len(csv_files_1)>=1:
+        if len(csv_files_2)>=1:
             shutil.move(src_path, dst_path)
         else:
             print('You are done!')
