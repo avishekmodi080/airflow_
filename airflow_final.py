@@ -46,23 +46,25 @@ def mail1():
     server.send_message(msg)
     print('Mail Sent')
 
-try:
-        db_connection = mysql.connector.connect(host="localhost", user="root", password="root", database="CredAble")
-        curr = db_connection.cursor(buffered=True)
-        curr.execute("""use CredAble;""")
-        curr.execute("""select max(cust_id) from table_1;""")
-        d = curr.fetchone()
-        curr.close()
-        print(d)
-except mysql.connector.Error as error:
-        print('error establishing connection to database {}'.format(error))
-
-print(d[0])
-
-b = d[0]
-with open('sequence_count.txt', 'w') as f:
-    f.write('{}'.format(b+1))
-    f.close()
+def reset_val_sequence():
+    ## this will reset the value of sequence.txt file to max(cust_id)+1 
+    try:
+            db_connection = mysql.connector.connect(host="localhost", user="root", password="root", database="CredAble")
+            curr = db_connection.cursor(buffered=True)
+            curr.execute("""use CredAble;""")
+            curr.execute("""select max(cust_id) from table_1;""")
+            d = curr.fetchone()
+            curr.close()
+            #print(d)
+    except mysql.connector.Error as error:
+            print('error establishing connection to database {}'.format(error))
+    
+    #print(d[0])
+    
+    b = d[0]
+    with open('sequence_count.txt', 'w') as f:
+        f.write('{}'.format(b+1))
+        f.close()
 
 def append_csvs():
         source = '/home/kcpl/SPYDER'
@@ -243,7 +245,12 @@ def_args = {
 
 with DAG("avishek_2",start_date=datetime(2023,2,7),schedule_interval= timedelta(minutes=5),catchup=False,max_active_runs=1, default_args=def_args) as dag:
     
-    
+    reset_seq_value = PythonOperator(
+    task_id='reset_seq_value',
+    email_on_failure=True,
+    python_callable = reset_val_sequence
+    )    
+       
     append_csv= PythonOperator(
     task_id='append_csv',
     email_on_failure=True,
@@ -275,4 +282,4 @@ with DAG("avishek_2",start_date=datetime(2023,2,7),schedule_interval= timedelta(
     python_callable = handling_left_over_csvs
     )
 
-append_csv>>wait_time>>re_check>>sleep_time>>moving_extra_csvs
+reset_seq_value>>append_csv>>wait_time>>re_check>>sleep_time>>moving_extra_csvs
